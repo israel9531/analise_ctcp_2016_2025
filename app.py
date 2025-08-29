@@ -17,7 +17,7 @@ st.sidebar.header("Entrada de dados")
 col_in1, col_in2 = st.sidebar.columns(2)
 
 DATA_DIR = Path(__file__).parent / "data"
-csv_path = DATA_DIR / "ctcp_2016.csv"
+csv_path = DATA_DIR / "dados_ctcp_2016.csv"
 
 df = pd.read_csv(csv_path, sep=";", encoding="utf-8")
 print(df.head())
@@ -400,4 +400,5 @@ with c_tab1:
 with c_tab2:
     st.caption("2025 (após filtros)")
     st.dataframe(df25_f, use_container_width=True)
+
 
