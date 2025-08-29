@@ -3,6 +3,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
+from pathlib import Path
 
 # =========================
 # CONFIG & TEMA
@@ -17,9 +18,10 @@ st.sidebar.header("Entrada de dados")
 col_in1, col_in2 = st.sidebar.columns(2)
 
 DATA_DIR = Path(__file__).parent / "data"
-csv_path = DATA_DIR / "dados_ctcp_2016.csv"
+csv_2016_path = DATA_DIR / "dados_ctcp_2016.csv"
+csv_2025_path = DATA_DIR / "dados_ctcp_2025.csv"
 
-df = pd.read_csv(csv_path, sep=";", encoding="utf-8")
+df = pd.read_csv(csv_2016_path, sep=";", encoding="utf-8")
 print(df.head())
 
 up2016 = st.sidebar.file_uploader("Ou faça upload do CSV 2016", type=["csv"], key="up2016")
@@ -37,7 +39,7 @@ err = None
 try:
     if up2016 is not None:
         df16 = load_csv(up2016)
-    elif csv_2016_path.strip():
+    elif csv_2016_path:
         df16 = load_csv(csv_2016_path)
 except Exception as e:
     err = f"2016: {e}"
@@ -47,7 +49,7 @@ df25 = None
 try:
     if up2025 is not None:
         df25 = load_csv(up2025)
-    elif csv_2025_path.strip():
+    elif csv_2025_path:
         df25 = load_csv(csv_2025_path)
 except Exception as e:
     err = (err + " | " if err else "") + f"2025: {e}"
@@ -400,5 +402,6 @@ with c_tab1:
 with c_tab2:
     st.caption("2025 (após filtros)")
     st.dataframe(df25_f, use_container_width=True)
+
 
 
