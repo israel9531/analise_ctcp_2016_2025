@@ -15,16 +15,12 @@ st.title("Análise frota CTCP 2016 × 2025 - Pelotas (RS)")
 # =========================
 st.sidebar.header("Entrada de dados")
 col_in1, col_in2 = st.sidebar.columns(2)
-with col_in1:
-    csv_2016_path = st.text_input(
-        "CSV 2016 (caminho opcional)",
-        r"C:\Users\israe\Desktop\analise tabela\meu_app_streamlit\dados_ctcp_2016.csv"
-    )
-with col_in2:
-    csv_2025_path = st.text_input(
-        "CSV 2025 (caminho opcional)",
-        r"C:\Users\israe\Desktop\analise tabela\meu_app_streamlit\dados_ctcp_2025.csv"
-    )
+
+DATA_DIR = Path(__file__).parent / "data"
+csv_path = DATA_DIR / "ctcp_2016.csv"
+
+df = pd.read_csv(csv_path, sep=";", encoding="utf-8")
+print(df.head())
 
 up2016 = st.sidebar.file_uploader("Ou faça upload do CSV 2016", type=["csv"], key="up2016")
 up2025 = st.sidebar.file_uploader("Ou faça upload do CSV 2025", type=["csv"], key="up2025")
@@ -404,3 +400,4 @@ with c_tab1:
 with c_tab2:
     st.caption("2025 (após filtros)")
     st.dataframe(df25_f, use_container_width=True)
+
