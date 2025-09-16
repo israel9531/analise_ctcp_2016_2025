@@ -21,17 +21,14 @@ DATA_DIR = Path(__file__).parent / "data"
 csv_2016_path = DATA_DIR / "dados_ctcp_2016.csv"
 csv_2025_path = DATA_DIR / "dados_ctcp_2025.csv"
 
-df = pd.read_csv(csv_2016_path, sep=";", encoding="utf-8")
-print(df.head())
-
 up2016 = st.sidebar.file_uploader("Ou faça upload do CSV 2016", type=["csv"], key="up2016")
 up2025 = st.sidebar.file_uploader("Ou faça upload do CSV 2025", type=["csv"], key="up2025")
 
 @st.cache_data(show_spinner=False)
 def load_csv(obj):
     if hasattr(obj, "read"):  # UploadedFile
-        return pd.read_csv(obj)
-    return pd.read_csv(obj)
+        return pd.read_csv(obj, sep=";", encoding="utf-8")
+    return pd.read_csv(obj, sep=";", encoding="utf-8")
 
 # Carrega 2016
 df16 = None
@@ -39,7 +36,7 @@ err = None
 try:
     if up2016 is not None:
         df16 = load_csv(up2016)
-    elif csv_2016_path:
+    elif csv_2016_path.exists():
         df16 = load_csv(csv_2016_path)
 except Exception as e:
     err = f"2016: {e}"
@@ -49,7 +46,7 @@ df25 = None
 try:
     if up2025 is not None:
         df25 = load_csv(up2025)
-    elif csv_2025_path:
+    elif csv_2025_path.exists():
         df25 = load_csv(csv_2025_path)
 except Exception as e:
     err = (err + " | " if err else "") + f"2025: {e}"
@@ -75,7 +72,7 @@ df16["idade"] = 2016 - df16["Ano"]
 df25["idade"] = 2025 - df25["Ano"]
 
 # =========================
-# SIDEBAR — FILTROS (aplicados aos dois anos)
+# SIDEBAR — FILTROS
 # =========================
 st.sidebar.header("Filtros")
 
@@ -137,86 +134,60 @@ frota25 = int(df25_f.shape[0] if "Prefixo" not in df25_f.columns else df25_f["Pr
 idade16 = float(df16_f["idade"].mean()) if len(df16_f) else 0.0
 idade25 = float(df25_f["idade"].mean()) if len(df25_f) else 0.0
 
-st.markdown(""" ... KPIs HTML ... """, unsafe_allow_html=True)
+st.metric("Frota 2016", frota16)
+st.metric("Frota 2025", frota25)
+st.metric("Idade média 2016", round(idade16, 1))
+st.metric("Idade média 2025", round(idade25, 1))
 
 st.divider()
 
 # =========================
-# HELPERS VISUAIS — CONFIG
+# FUNÇÕES DE GRÁFICOS
 # =========================
-FACE = "#FFFFFF"
-CHART_CFG = { ... }
+def hbar(series, title, xlabel="Quantidade"):
+    fig, ax = plt.subplots(figsize=(5, 3))
+    series.sort_values().plot(kind="barh", ax=ax, color="skyblue")
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    st.pyplot(fig)
 
-def _rc_from_cfg(cfg): ...
-def hbar(series, title, cfg, xlabel="Quantidade", annotate_fmt="{:,.0f}"): ...
-def bar_mean(series, title, cfg, ylabel="Idade média (anos)"): ...
-def pie_chart(series, title, cfg): ...
+def bar_mean(series, title, ylabel="Idade média (anos)"):
+    fig, ax = plt.subplots(figsize=(5, 3))
+    series.sort_values().plot(kind="bar", ax=ax, color="orange")
+    ax.set_title(title)
+    ax.set_ylabel(ylabel)
+    st.pyplot(fig)
 
-# =========================
-# CHAVE DE COMPARAÇÃO (entraram/saíram/permaneceram)
-# =========================
-comuns = sorted(list(set(df16.columns).intersection(df25.columns)))
-if not comuns:
-    st.warning("Não há colunas em comum entre 2016 e 2025."); st.stop()
-
-chave = "Prefixo" if "Prefixo" in comuns else comuns[0]
-
-for d in (df16_f, df25_f):
-    d[chave] = d[chave].astype(str).str.strip()
-
-set16, set25 = set(df16_f[chave]), set(df25_f[chave])
-permaneceram = sorted(set16 & set25)
-entraram = sorted(set25 - set16)
-sairam = sorted(set16 - set25)
+def pie_chart(series, title):
+    fig, ax = plt.subplots(figsize=(4, 4))
+    series.value_counts().plot(kind="pie", ax=ax, autopct="%1.1f%%")
+    ax.set_ylabel("")
+    ax.set_title(title)
+    st.pyplot(fig)
 
 # =========================
-# GRÁFICOS — COMPARATIVOS POR ANO
+# GRÁFICOS COMPARATIVOS
 # =========================
-c1, c2 = st.columns(2, gap="large")
-with c1: ...
-with c2: ...
+c1, c2 = st.columns(2)
+with c1:
+    hbar(df16_f["Carroceria"].value_counts().head(TOP_N), "Top Carrocerias 2016")
+with c2:
+    hbar(df25_f["Carroceria"].value_counts().head(TOP_N), "Top Carrocerias 2025")
 
-c3, c4 = st.columns(2, gap="large")
-with c3: ...
-with c4: ...
+c3, c4 = st.columns(2)
+with c3:
+    pie_chart(df16_f["Elevador"], "Elevador 2016")
+with c4:
+    pie_chart(df25_f["Elevador"], "Elevador 2025")
 
-c5, c6 = st.columns(2, gap="large")
-with c5: ...
-with c6: ...
-
-c7, c8 = st.columns(2, gap="large")
-with c7: ...
-with c8: ...
-
-c9, c10 = st.columns(2, gap="large")
-with c9: ...
-with c10: ...
-
-st.subheader("Letreiros — 2016 e 2025")
-c11, c12 = st.columns(2, gap="large")
-with c11: ...
-with c12: ...
-
-st.divider()
+c5, c6 = st.columns(2)
+with c5:
+    hbar(df16_f["Chassi"].value_counts().head(TOP_N), "Chassis 2016")
+with c6:
+    hbar(df25_f["Chassi"].value_counts().head(TOP_N), "Chassis 2025")
 
 # =========================
-# COMPARAÇÃO TABULAR (categorias lado a lado)
-# =========================
-st.subheader("Tabelas comparativas por categoria")
-
-def comp_table(col): ...
-
-descriptions = { ... }
-
-for colcat in ["Empresa", "Carroceria", "Chassi", "Letreiro", "Elevador", "Ar"]:
-    comp = comp_table(colcat)
-    if comp is not None and not comp.empty:
-        with st.expander(f"Comparação por {colcat}"):
-            st.caption(descriptions.get(colcat, "📊 Comparação entre 2016 e 2025."))
-            st.dataframe(comp)
-
-# =========================
-# TABELAS FILTRADAS (2016 e 2025)
+# TABELAS COMPARATIVAS
 # =========================
 st.subheader("Tabelas filtradas — 2016 e 2025")
 c_tab1, c_tab2 = st.columns(2)
