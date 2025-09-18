@@ -18,12 +18,12 @@ col_in1, col_in2 = st.sidebar.columns(2)
 with col_in1:
     csv_2016_path = st.text_input(
         "CSV 2016 (caminho opcional)",
-        r"https://github.com/israel9531/analise_ctcp_2016_2025/tree/main/data/dados_ctcp_2016.csv"
+        "https://github.com/israel9531/analise_ctcp_2016_2025/tree/main/data/dados_ctcp_2016.csv"
     )
 with col_in2:
     csv_2025_path = st.text_input(
         "CSV 2025 (caminho opcional)",
-        r"https://github.com/israel9531/analise_ctcp_2016_2025/tree/main/data/dados_ctcp_2025.csv"
+        "https://github.com/israel9531/analise_ctcp_2016_2025/tree/main/data/dados_ctcp_2025.csv"
     )
 
 up2016 = st.sidebar.file_uploader("Ou faça upload do CSV 2016", type=["csv"], key="up2016")
@@ -404,4 +404,5 @@ with c_tab1:
 with c_tab2:
     st.caption("2025 (após filtros)")
     st.dataframe(df25_f, use_container_width=True)
+
 
